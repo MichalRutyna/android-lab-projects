@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Michal R super aplikacja</string>
+    <string name="name">Imię:</string>
+    <string name="insert_name">Wpisz imię</string>
+    <string name="surname">Nazwisko:</string>
+    <string name="enter_surname">Wpisz nazwisko</string>
+    <string name="number_of_grades">Liczba ocen:</string>
+    <string name="enter_number_of_grades">Wpisz liczbe ocen (5-15)</string>
+    <string name="grades">Oceny</string>
+    <string name="calculate_mean">Oblicz średnią</string>
+
+    <string name="your_mean">Twoja średnia to: </string>
+    <string name="nice">Super :)</string>
+    <string name="next_time">Tym razem mi nie poszło</string>
+
+
+    <string-array name="nazwy_przedmiotow">
+        <item>Matematyka 1</item>
+        <item>Matematyka 2</item>
+        <item>Fizyka</item>
+        <item>Ios</item>
+        <item>.NET</item>
+        <item>C++</item>
+        <item>C</item>
+        <item>Java</item>
+        <item>Chemia</item>
+        <item>Biologia</item>
+        <item>Mars</item>
+        <item>Jowisz</item>
+        <item>Saturn</item>
+        <item>Uran</item>
+        <item>Neptun</item>
+    </string-array>
+
+</resources>
