@@ -165,13 +165,13 @@ public class MyService extends Service {
                 sendMessagesAndUpdateNotification();
                 downloaded = reader.read(buffer, 0, BLOCK_SIZE);
             }
+            bytesDownloaded = 0;
             values.put(MediaStore.Downloads.IS_PENDING, 0);
             getContentResolver().update(fileUri, values, null, null);
             //usługa schodzi z pierwszego planu (aby można było usunąć powiadomienie)
             Log.d(TAG, "downloadFile - going to background");
             stopForeground(STOP_FOREGROUND_REMOVE);
             //aktualizacja powiadomienia
-            sendMessagesAndUpdateNotification();
         } catch (Exception e) {
             errored = true;
             e.printStackTrace();
@@ -183,8 +183,6 @@ public class MyService extends Service {
             //usługa schodzi z pierwszego planu (aby powiadomienie zniknęło)
             Log.d(TAG, "downloadFile - going to background");
             stopForeground(STOP_FOREGROUND_REMOVE);
-            //aktualizacja powiadomień i statusu postępu
-            sendMessagesAndUpdateNotification();
         } finally {
             //zamykanie strumieni i zakończenie połączenia
             if (fileOutputStream != null) {
@@ -223,34 +221,36 @@ public class MyService extends Service {
         //tworzenie powiadomienia
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, CHANNEL_ID);
-        builder.setContentTitle(getString(R.string.notification_title_downloading))
-                .setContentText(getString(R.string.notification_text_downloading))
-                .setProgress(100, percentage(), false)
+        int progress = percentage();
+        builder
+                .setProgress(100, progress, false)
                 .setSmallIcon(R.drawable.big_chungus)
                 .setWhen(System.currentTimeMillis())
                 .setPriority(Notification.PRIORITY_LOW); // dla Android 7.1-
         //w zależności o stanu pobierania ustawiamy różny tytuł
         if (!errored) {
-            builder.setContentTitle(getString(R.string.notification_text_finished));
+            if (progress < 100)
+            {
+                builder.setContentTitle(getString(R.string.notification_title_downloading));
+                builder.setContentText(getString(R.string.notification_text_downloading));
+                builder.setOngoing(true);
+            }
+            else {
+                builder.setContentTitle(getString(R.string.notification_text_finished));
+                builder.setAutoCancel(true);
+                builder.setOngoing(false);
+            }
         }
         else {
             builder.setContentTitle(getString(R.string.notification_text_finished_error));
             builder.setAutoCancel(true);
         }
-        if (percentage() == 100) {
-            //automatyczne
-            //zamykanie powiadomienia
-            builder.setAutoCancel(true);
-        }
-        else {
-            //jeżeli pobieranie trwa to powiadomienie ma być ustawione jako trwające
-            builder.setOngoing(true);
-        }
         return builder.build();
     }
 
     private int percentage() {
-        return bytesDownloaded / mfileSize;
+        System.out.println("download: " + bytesDownloaded + "/" + mfileSize);
+        return (int) (((float) bytesDownloaded / mfileSize) * 100);
     }
 
     //aktualizacja powiadomień
@@ -260,10 +260,13 @@ public class MyService extends Service {
         //(jeżeli wysyłamy powiadomienia za często nie wszystkie zostaną wyświetlone)
         //sprawdzić jaki jest stan pobierania
         if (percentage() < 100) {//wyświetlić powiadomienie
+            System.out.println("progress");
             notificationManager.notify(NOTIFICATION_ID_PROGRESS, getNotification());
         }
         else { //jeżeli pobieranie się zakończyło zalecane jest użycie innego identyfikatora
             //powiadomienia wtedy na pewno się wyświetli
+            System.out.println("complete");
+            notificationManager.cancel(NOTIFICATION_ID_PROGRESS);
             notificationManager.notify(NOTIFICATION_ID_COMPLETE, getNotification());
         }
     }

@@ -1,10 +1,9 @@
 <resources>
-    <string name="app_name">Rm31</string>
-    <string name="https_encrypted_tbn0_gstatic_com_images_q_tbn_and9gctfwtxxo18oc91b7mpnlgwre_2ji5vvqpyl2pytvor0am_mxt4crbtv3b4_m8dtjrgxtkw_usqp_cau"><![CDATA[https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfwTXxO18Oc91b7MPNLGWRe-2jI5VVQPyL2Pytvor0Am-mxt4crBTV3b4_m8DtjRgxtKw&usqp=CAU]]></string>
-    <string name="notification_channel_name">Pobieranie w tlee</string>
+    <string name="app_name">Rm31</string><string name="notification_channel_name">Pobieranie w tlee</string>
     <string name="notification_channel_description">Cudowna aplikacja pobiera niezbyt ważne dane</string>
     <string name="notification_title_downloading">Pobieraniee</string>
     <string name="notification_text_downloading">Bardzo nieważne pobieranie</string>
     <string name="notification_text_finished">Pobieranie zakonczone</string>
     <string name="notification_text_finished_error">Pobieranie zakonczyło sie błędem</string>
+    <string name="https_images_steamusercontent_com_ugc_961982620895792832_a2555dbbf5d46d33106af0f8f1fcd6a02dd914c1_imw_512_ima_fit_impolicy_letterbox_imcolor_23000000_letterbox_false"><![CDATA[https://images.steamusercontent.com/ugc/961982620895792832/A2555DBBF5D46D33106AF0F8F1FCD6A02DD914C1/?imw=512&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false]]></string>
 </resources>

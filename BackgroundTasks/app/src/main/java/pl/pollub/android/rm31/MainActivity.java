@@ -128,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
         TextView fileType = findViewById(R.id.fileTypeValue);
         TextView bytesDownloaded = findViewById(R.id.bytesDownloadedValue);
 
+        System.out.println(info);
+
         file_size = info.length;
         file_type = info.type;
 

@@ -3,7 +3,10 @@ package pl.pollub.android.rm31;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +25,14 @@ public class ShortTask {
         public FileInfo(int length, String type) {
             this.length = length;
             this.type = type;
+        }
+
+        @Override
+        public String toString() {
+            return "FileInfo{" +
+                    "length=" + length +
+                    ", type='" + type + '\'' +
+                    '}';
         }
     }
 
@@ -61,9 +72,9 @@ public class ShortTask {
                 // przekazanie wyniku
                 callback.onSuccess(result);
             } catch (CancellationException e) {
-                // ewentualna reakcja na anulowanie
+                System.out.println("canceled");
             } catch (Exception e) {
-                // przekazanie informacji o błędach
+                System.out.println("error in task: " + e);
                 callback.onError(e);
             }
         };
@@ -71,22 +82,23 @@ public class ShortTask {
         Callable<FileInfo> asyncTask = new Callable<FileInfo>() {
             @Override // wykonywane zadania mogą powodować wyjątki
             public FileInfo call() throws Exception {
-                HttpsURLConnection connection = null;
+                URLConnection connection = null;
                 FileInfo fileInfo = null;
                 try {
                     URL url = new URL(param);
-                    connection = (HttpsURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
+                    connection = (URLConnection) url.openConnection();
+//                    connection.setRequestMethod("GET");
+                    System.out.println("Connection: " + connection);
                     // custom FileInfo class
                     fileInfo = new FileInfo(connection.getContentLength(),
                             connection.getContentType());
-                } finally {
-                    if (connection != null)
-                        connection.disconnect();
+                } catch (Exception e) {
+                    System.out.println("error insiiide task: " + e);
                 }
                 // wynik jest gotowy – wysyłamy do wykonania zadanie przekazujące wynik
                 mainThreadHandler.post(completionTask);
                 // zakończenie przyszłości (poprzez ustawienie wyniku)
+                System.out.println("Task finished");
                 return fileInfo;
             }
         };
