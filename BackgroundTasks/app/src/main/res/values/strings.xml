@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Rm31</string>
+    <string name="https_encrypted_tbn0_gstatic_com_images_q_tbn_and9gctfwtxxo18oc91b7mpnlgwre_2ji5vvqpyl2pytvor0am_mxt4crbtv3b4_m8dtjrgxtkw_usqp_cau"><![CDATA[https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfwTXxO18Oc91b7MPNLGWRe-2jI5VVQPyL2Pytvor0Am-mxt4crBTV3b4_m8DtjRgxtKw&usqp=CAU]]></string>
+    <string name="notification_channel_name">Pobieranie w tlee</string>
+    <string name="notification_channel_description">Cudowna aplikacja pobiera niezbyt ważne dane</string>
+    <string name="notification_title_downloading">Pobieraniee</string>
+    <string name="notification_text_downloading">Bardzo nieważne pobieranie</string>
+    <string name="notification_text_finished">Pobieranie zakonczone</string>
+    <string name="notification_text_finished_error">Pobieranie zakonczyło sie błędem</string>
+</resources>
