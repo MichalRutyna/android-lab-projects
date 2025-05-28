@@ -9,13 +9,16 @@ import static androidx.core.content.ContextCompat.getSystemService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -27,6 +30,8 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -47,14 +52,35 @@ public class MyService extends Service {
     private NotificationManager notificationManager;
     private HandlerThread handlerThread;
     private Handler handler;
+
+
     //metoda odpowiedzialna za zwrócenie Bindera, w przypadku usług niezwiązanych
     //(unbounded) musi zwracać null
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind");
-        return null;
+        return binder;
     }
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
+    }
+
+
+    //obiekt LiveData do przekazywana informacji o postępie do aktywności
+    private MutableLiveData<ProgressEvent> progressLiveData =
+            new MutableLiveData<>(null);
+
+    //Binder definiuje metody, które można wywoływać z zewnątrz np. z aktywności
+    public class MyServiceBinder extends Binder {
+        LiveData<ProgressEvent> getProgressEvent() {
+            return progressLiveData;
+        }
+    }
+    private final IBinder binder = new MyServiceBinder();
+
+
 
     String mfileName;
     String mmimeType;
@@ -218,6 +244,19 @@ public class MyService extends Service {
 
     //tworzenie powiadomienia
     private Notification getNotification() {
+        //tworzenie intencji oczekującej uruchamiającej
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        //zapisanie potrzebnych danych (może być więcej niż jeden element)
+//        notificationIntent.putExtra(KEY, data);
+        //utworzenie stosu aktywności
+        TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
+        taskStackBuilder.addParentStack(MainActivity.class);
+        taskStackBuilder.addNextIntent(notificationIntent);
+        //flaga FLAG_IMMUTABLE jest wymagaja dla Androida 12 (API Level 31) i
+        //późniejszych
+        PendingIntent pendingIntent = taskStackBuilder.getPendingIntent(0,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         //tworzenie powiadomienia
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, CHANNEL_ID);
@@ -226,7 +265,8 @@ public class MyService extends Service {
                 .setProgress(100, progress, false)
                 .setSmallIcon(R.drawable.big_chungus)
                 .setWhen(System.currentTimeMillis())
-                .setPriority(Notification.PRIORITY_LOW); // dla Android 7.1-
+                .setPriority(Notification.PRIORITY_LOW) // dla Android 7.1-
+                .setContentIntent(pendingIntent);
         //w zależności o stanu pobierania ustawiamy różny tytuł
         if (!errored) {
             if (progress < 100)
@@ -269,6 +309,8 @@ public class MyService extends Service {
             notificationManager.cancel(NOTIFICATION_ID_PROGRESS);
             notificationManager.notify(NOTIFICATION_ID_COMPLETE, getNotification());
         }
+        progressLiveData.postValue(new ProgressEvent(percentage(), mfileSize, bytesDownloaded));
+
     }
 
     //Android 10 (API Level 29) - pobieranie URI istniejącego pliku z bazy plików

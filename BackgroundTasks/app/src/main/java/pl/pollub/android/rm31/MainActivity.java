@@ -5,11 +5,16 @@ import static android.Manifest.permission.POST_NOTIFICATIONS;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
@@ -20,6 +25,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.LiveData;
 
 import java.util.Arrays;
 
@@ -29,6 +35,60 @@ public class MainActivity extends AppCompatActivity {
 
     int file_size;
     String file_type;
+
+    //czy mamy połącznie z usługą
+    private boolean serviceBound = false;
+    //dane z usługi
+    private LiveData<ProgressEvent> progressEventLiveData;
+
+    //reagowanie na połączenie/rozłączenie z usługą
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            serviceBound = true;
+            MyService.MyServiceBinder downloadBinder =
+                    (MyService.MyServiceBinder) iBinder;
+            //zapisanie i włączenie obserwowania obiektu LiveData z danymi z usługi
+            progressEventLiveData = downloadBinder.getProgressEvent();
+            progressEventLiveData.observe(MainActivity.this,
+                    MainActivity.this::updateProgress);
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            //wyłączenie obserwowania
+            progressEventLiveData.removeObservers(MainActivity.this);
+            serviceBound = false;
+        }
+    };
+
+    private void updateProgress(ProgressEvent progressEvent) {
+        TextView bytesDownloaded = findViewById(R.id.bytesDownloadedValue);
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+
+        if (progressEvent == null)
+            return;
+
+        bytesDownloaded.setText(String.valueOf(progressEvent.result));
+
+        progressBar.setMax(progressEvent.total);
+        progressBar.setProgress(progressEvent.result);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putInt("file_size", file_size);
+        savedInstanceState.putString("file_type", file_type);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        file_size = savedInstanceState.getInt("file_size");
+        file_type = savedInstanceState.getString("file_type");
+        super.onRestoreInstanceState(savedInstanceState);
+        displayResponse(new ShortTask.FileInfo(file_size, file_type));
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +100,11 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         mTaskService = new ShortTask();
+
+        Intent myServiceIntent = new Intent(this, MyService.class);
+        bindService(myServiceIntent, serviceConnection,
+                Context.BIND_AUTO_CREATE);
     }
 
     public void onGetInfoClick(View v) {
@@ -126,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
     private void displayResponse(ShortTask.FileInfo info) {
         TextView fileSize = findViewById(R.id.fileSizeValue);
         TextView fileType = findViewById(R.id.fileTypeValue);
-        TextView bytesDownloaded = findViewById(R.id.bytesDownloadedValue);
 
         System.out.println(info);
 
@@ -152,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        unbindService(serviceConnection);
         mTaskService.shutdown();
         super.onDestroy();
     }
